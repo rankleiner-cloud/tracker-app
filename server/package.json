@@ -1,0 +1,10 @@
+{
+  "name": "tracker-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "sql.js": "^1.12.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}

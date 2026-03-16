@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(netstat -ano)",
+      "Bash(xargs -I {} taskkill /PID {} /F)"
+    ]
+  }
+}

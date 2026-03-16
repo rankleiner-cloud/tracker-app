@@ -1,0 +1,13 @@
+{
+  "name": "tracker-app",
+  "version": "1.0.0",
+  "scripts": {
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "dev": "concurrently \"cd server && node index.js\" \"cd client && npm run dev\"",
+    "build": "cd server && npm install && cd ../client && npm install && npm run build",
+    "start": "cd server && node index.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
