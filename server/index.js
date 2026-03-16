@@ -289,7 +289,7 @@ app.get('/api/attachments/:id/file', (req, res) => {
     const att = db.prepare('SELECT * FROM item_attachments WHERE id = ?').get(id);
     if (!att) return fail(res, 'Attachment not found.', 404);
 
-    const filePath = path.resolve(path.join(__dirname, 'uploads', att.filename));
+    const filePath = path.resolve(path.join(UPLOADS_DIR, att.filename));
     if (!fs.existsSync(filePath)) return fail(res, 'File not found on disk.', 404);
 
     res.setHeader('Content-Type', att.mimetype);
