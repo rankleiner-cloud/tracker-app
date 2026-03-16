@@ -39,13 +39,22 @@ function TrashIcon() {
   );
 }
 
+function PaperclipIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+    </svg>
+  );
+}
+
 function formatDate(dt) {
   if (!dt) return '—';
   const d = new Date(dt);
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewItem, totalCount }) {
+export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewItem, totalCount, onOpenAttachments }) {
   const { t } = useLanguage();
 
   const typeLabel = (type) => ({
@@ -194,6 +203,24 @@ export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewIt
                         style={{ color: '#ef4444' }}
                       >
                         <TrashIcon />
+                      </button>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => onOpenAttachments(item)}
+                        title={t('attachments')}
+                        style={{ color: '#6b7280', position: 'relative' }}
+                      >
+                        <PaperclipIcon />
+                        {item.attachment_count > 0 && (
+                          <span style={{
+                            position: 'absolute', top: -4, right: -4,
+                            background: '#4f46e5', color: '#fff',
+                            borderRadius: '50%', width: 14, height: 14,
+                            fontSize: '0.6rem', fontWeight: 700,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            lineHeight: 1,
+                          }}>{item.attachment_count}</span>
+                        )}
                       </button>
                     </div>
                   </td>

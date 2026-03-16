@@ -87,6 +87,7 @@ function buildReportHTML(items, filters, users, components, t, lang) {
         <td>${item.assigned_to_name || '—'}</td>
         <td>${item.component_name || '—'}</td>
         <td>${formatDate(item.created_at)}</td>
+        <td>${item.status === 'closed' && item.closed_at ? formatDate(item.closed_at) : '—'}</td>
       </tr>`;
   }).join('');
 
@@ -164,10 +165,11 @@ function buildReportHTML(items, filters, users, components, t, lang) {
         <th>${t('reportHTMLColAssignedTo')}</th>
         <th>${t('reportHTMLColComponent')}</th>
         <th>${t('reportHTMLColCreated')}</th>
+        <th>${t('reportColClosedOn')}</th>
       </tr>
     </thead>
     <tbody>
-      ${rows || `<tr><td colspan="10" style="text-align:center;padding:30px;color:#9ca3af">${t('reportHTMLNoItems')}</td></tr>`}
+      ${rows || `<tr><td colspan="11" style="text-align:center;padding:30px;color:#9ca3af">${t('reportHTMLNoItems')}</td></tr>`}
     </tbody>
   </table>
   <div class="count">${t('reportHTMLCount', items.length)}</div>

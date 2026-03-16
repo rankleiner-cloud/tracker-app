@@ -92,7 +92,23 @@ function createSchema() {
       assigned_to  INTEGER REFERENCES users(id),
       component_id INTEGER REFERENCES components(id),
       created_at   TEXT DEFAULT (datetime('now')),
-      updated_at   TEXT DEFAULT (datetime('now'))
+      updated_at   TEXT DEFAULT (datetime('now')),
+      closed_at    TEXT DEFAULT NULL
+    );
+  `);
+
+  // Add closed_at column to existing databases
+  try { db.run(`ALTER TABLE items ADD COLUMN closed_at TEXT DEFAULT NULL`); } catch (_) {}
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS item_attachments (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      item_id       INTEGER NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+      filename      TEXT NOT NULL,
+      original_name TEXT NOT NULL,
+      mimetype      TEXT NOT NULL,
+      size          INTEGER NOT NULL,
+      created_at    TEXT DEFAULT (datetime('now'))
     );
   `);
 }

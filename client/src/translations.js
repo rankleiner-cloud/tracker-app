@@ -56,6 +56,16 @@ const translations = {
     colActions:      'Actions',
     duplicateItem:   'Duplicate',
     noItems:         'No items match the current filters.',
+    colAttachments:      'Files',
+    attachments:         'Attachments',
+    attachmentsOf:       (title) => `Attachments — ${title}`,
+    attachUpload:        'Upload File',
+    attachUploading:     'Uploading...',
+    attachEmpty:         'No attachments yet.',
+    attachHint:          'txt, pdf, jpg, png, gif, webp · max 5 MB',
+    attachDeleteConfirm: (name) => `Delete "${name}"?`,
+    attachOpen:          'Open',
+    reportColClosedOn:   'Closed On',
 
     // Item form
     editItemTitle:   'Edit Item',
@@ -197,6 +207,16 @@ const translations = {
     colActions:      'פעולות',
     duplicateItem:   'שכפל',
     noItems:         'לא נמצאו פריטים התואמים את הפילטרים.',
+    colAttachments:      'קבצים',
+    attachments:         'קבצים מצורפים',
+    attachmentsOf:       (title) => `קבצים — ${title}`,
+    attachUpload:        'העלה קובץ',
+    attachUploading:     'מעלה...',
+    attachEmpty:         'אין קבצים מצורפים עדיין.',
+    attachHint:          'txt, pdf, jpg, png, gif, webp · עד 5 MB',
+    attachDeleteConfirm: (name) => `למחוק "${name}"?`,
+    attachOpen:          'פתח',
+    reportColClosedOn:   'נסגר בתאריך',
 
     // Item form
     editItemTitle:   'עריכת פריט',

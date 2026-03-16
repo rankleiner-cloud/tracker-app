@@ -1,4 +1,5 @@
 node_modules/
 client/dist/
 server/tracker.db
+server/uploads/
 .env

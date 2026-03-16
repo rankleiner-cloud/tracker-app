@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import ItemList    from './components/ItemList.jsx';
-import ItemForm    from './components/ItemForm.jsx';
-import ItemFilters from './components/ItemFilters.jsx';
-import ConfigPanel from './components/ConfigPanel.jsx';
-import ReportPanel from './components/ReportPanel.jsx';
+import ItemList          from './components/ItemList.jsx';
+import ItemForm          from './components/ItemForm.jsx';
+import ItemFilters       from './components/ItemFilters.jsx';
+import ConfigPanel       from './components/ConfigPanel.jsx';
+import ReportPanel       from './components/ReportPanel.jsx';
+import AttachmentsModal  from './components/AttachmentsModal.jsx';
 import { useLanguage } from './LanguageContext.jsx';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -23,12 +24,13 @@ async function apiFetch(url, options = {}) {
 export default function App() {
   const { lang, setLang, t, isRTL } = useLanguage();
 
-  const [view, setView]           = useState('items'); // 'items' | 'report' | 'config'
+  const [view, setView]           = useState('items'); // 'items' | 'component-{id}' | 'report' | 'config'
   const [items, setItems]         = useState([]);
   const [users, setUsers]         = useState([]);
   const [components, setComponents] = useState([]);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState('');
+  const [attachmentsItem, setAttachmentsItem] = useState(null);
 
   // form state
   const [formOpen, setFormOpen]   = useState(false);
@@ -150,9 +152,30 @@ export default function App() {
     setComponents(prev => prev.filter(c => c.id !== id));
   };
 
+  // ── attachment count change ─────────────────────────────────────────────────
+
+  const handleAttachmentCountChange = (itemId, newCount) => {
+    setItems(prev => prev.map(i => i.id === itemId ? { ...i, attachment_count: newCount } : i));
+  };
+
+  // ── reset view when active component is deleted ────────────────────────────
+
+  useEffect(() => {
+    if (view.startsWith('component-')) {
+      const activeComponentId = parseInt(view.replace('component-', ''), 10);
+      const exists = components.some(c => c.id === activeComponentId);
+      if (!exists) setView('items');
+    }
+  }, [components]);
+
   // ── filtered items ─────────────────────────────────────────────────────────
 
+  const activeComponentId = view.startsWith('component-')
+    ? parseInt(view.replace('component-', ''), 10)
+    : null;
+
   const filteredItems = items.filter(item => {
+    if (activeComponentId !== null && item.component_id !== activeComponentId) return false;
     if (filters.type     !== 'all' && item.type     !== filters.type)     return false;
     if (filters.status   !== 'all' && item.status   !== filters.status)   return false;
     if (filters.priority !== 'all' && item.priority !== filters.priority) return false;
@@ -174,6 +197,7 @@ export default function App() {
 
   const navItems = [
     { key: 'items',  label: t('navItems') },
+    ...components.map(c => ({ key: `component-${c.id}`, label: c.name, isComponent: true })),
     { key: 'report', label: t('navReport') },
     { key: 'config', label: t('navConfig') },
   ];
@@ -205,26 +229,31 @@ export default function App() {
           <span style={{ fontSize: '1.3rem' }}>&#128203;</span> {t('appTitle')}
         </span>
 
-        {navItems.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setView(key)}
-            style={{
-              background: view === key ? 'rgba(255,255,255,0.15)' : 'transparent',
-              color: view === key ? '#fff' : 'rgba(255,255,255,0.65)',
-              border: 'none',
-              padding: '6px 18px',
-              borderRadius: 6,
-              cursor: 'pointer',
-              fontWeight: view === key ? 600 : 400,
-              fontSize: '0.9rem',
-              transition: 'background 0.15s, color 0.15s',
-              height: 36,
-            }}
-          >
-            {label}
-          </button>
-        ))}
+        {navItems.map(({ key, label, isComponent }) => {
+          const isActive = view === key;
+          let activeBg = 'rgba(255,255,255,0.15)';
+          if (isComponent && isActive) activeBg = 'rgba(99,102,241,0.15)';
+          return (
+            <button
+              key={key}
+              onClick={() => setView(key)}
+              style={{
+                background: isActive ? activeBg : 'transparent',
+                color: isActive ? '#fff' : 'rgba(255,255,255,0.65)',
+                border: 'none',
+                padding: '6px 18px',
+                borderRadius: 6,
+                cursor: 'pointer',
+                fontWeight: isActive ? 600 : 400,
+                fontSize: '0.9rem',
+                transition: 'background 0.15s, color 0.15s',
+                height: 36,
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
 
         {/* Language toggle — pushed to the far end */}
         <div style={{ marginInlineStart: 'auto', display: 'flex', gap: 2 }}>
@@ -264,7 +293,7 @@ export default function App() {
           </div>
         )}
 
-        {!loading && !error && view === 'items' && (
+        {!loading && !error && (view === 'items' || view.startsWith('component-')) && (
           <>
             <ItemFilters
               filters={filters}
@@ -277,7 +306,10 @@ export default function App() {
               onDelete={handleDeleteItem}
               onDuplicate={openDuplicate}
               onNewItem={openCreate}
-              totalCount={items.length}
+              totalCount={activeComponentId !== null
+                ? items.filter(i => i.component_id === activeComponentId).length
+                : items.length}
+              onOpenAttachments={(item) => setAttachmentsItem(item)}
             />
           </>
         )}
@@ -312,6 +344,15 @@ export default function App() {
           components={components}
           onSave={handleSaveItem}
           onClose={closeForm}
+        />
+      )}
+
+      {/* Attachments modal */}
+      {attachmentsItem && (
+        <AttachmentsModal
+          item={attachmentsItem}
+          onClose={() => setAttachmentsItem(null)}
+          onCountChange={handleAttachmentCountChange}
         />
       )}
     </div>

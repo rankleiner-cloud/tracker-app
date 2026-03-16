@@ -2,8 +2,48 @@ require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
 const path    = require('path');
+const fs      = require('fs');
+const multer  = require('multer');
 const { getDb, initDb }         = require('./database');
 const { startScheduler }        = require('./emailScheduler');
+
+// ─── Uploads directory ────────────────────────────────────────────────────────
+
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+// ─── Multer configuration ─────────────────────────────────────────────────────
+
+const ALLOWED_MIMETYPES = [
+  'text/plain',
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+];
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
+  filename:    (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `${Date.now()}-${Math.floor(Math.random() * 1e9)}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_MIMETYPES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('File type not allowed.'));
+    }
+  },
+});
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -34,9 +74,11 @@ app.get('/api/items', (req, res) => {
         i.component_id,
         i.created_at,
         i.updated_at,
+        i.closed_at,
         u1.name AS opened_by_name,
         u2.name AS assigned_to_name,
-        c.name  AS component_name
+        c.name  AS component_name,
+        (SELECT COUNT(*) FROM item_attachments ia WHERE ia.item_id = i.id) AS attachment_count
       FROM items i
       LEFT JOIN users      u1 ON u1.id = i.opened_by
       LEFT JOIN users      u2 ON u2.id = i.assigned_to
@@ -73,14 +115,26 @@ app.post('/api/items', (req, res) => {
     if (!validStatuses.includes(status))     return fail(res, 'Invalid status.');
     if (!validPriorities.includes(priority)) return fail(res, 'Invalid priority.');
 
-    const result = db.prepare(`
-      INSERT INTO items (type, title, description, status, priority, opened_by, assigned_to, component_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(type, title.trim(), description, status, priority,
-           opened_by, assigned_to || null, component_id || null);
+    const closedAt = status === 'closed' ? "datetime('now')" : null;
+
+    let result;
+    if (closedAt) {
+      result = db.prepare(`
+        INSERT INTO items (type, title, description, status, priority, opened_by, assigned_to, component_id, closed_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      `).run(type, title.trim(), description, status, priority,
+             opened_by, assigned_to || null, component_id || null);
+    } else {
+      result = db.prepare(`
+        INSERT INTO items (type, title, description, status, priority, opened_by, assigned_to, component_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(type, title.trim(), description, status, priority,
+             opened_by, assigned_to || null, component_id || null);
+    }
 
     const newItem = db.prepare(`
-      SELECT i.*, u1.name AS opened_by_name, u2.name AS assigned_to_name, c.name AS component_name
+      SELECT i.*, u1.name AS opened_by_name, u2.name AS assigned_to_name, c.name AS component_name,
+        (SELECT COUNT(*) FROM item_attachments ia WHERE ia.item_id = i.id) AS attachment_count
       FROM items i
       LEFT JOIN users u1 ON u1.id = i.opened_by
       LEFT JOIN users u2 ON u2.id = i.assigned_to
@@ -117,17 +171,37 @@ app.put('/api/items/:id', (req, res) => {
     const newAssignedTo  = assigned_to  !== undefined ? (assigned_to  || null) : current.assigned_to;
     const newComponentId = component_id !== undefined ? (component_id || null) : current.component_id;
 
-    db.prepare(`
-      UPDATE items
-      SET type=?, title=?, description=?, status=?, priority=?,
-          opened_by=?, assigned_to=?, component_id=?,
-          updated_at=datetime('now')
-      WHERE id=?
-    `).run(newType, newTitle, newDescription, newStatus, newPriority,
-           newOpenedBy, newAssignedTo, newComponentId, id);
+    // Determine closed_at transition
+    const wasClosing   = current.status !== 'closed' && newStatus === 'closed';
+    const wasOpening   = current.status === 'closed' && newStatus !== 'closed';
+
+    let newClosedAt = current.closed_at;
+    if (wasClosing)  newClosedAt = '__now__';
+    if (wasOpening)  newClosedAt = null;
+
+    if (newClosedAt === '__now__') {
+      db.prepare(`
+        UPDATE items
+        SET type=?, title=?, description=?, status=?, priority=?,
+            opened_by=?, assigned_to=?, component_id=?,
+            updated_at=datetime('now'), closed_at=datetime('now')
+        WHERE id=?
+      `).run(newType, newTitle, newDescription, newStatus, newPriority,
+             newOpenedBy, newAssignedTo, newComponentId, id);
+    } else {
+      db.prepare(`
+        UPDATE items
+        SET type=?, title=?, description=?, status=?, priority=?,
+            opened_by=?, assigned_to=?, component_id=?,
+            updated_at=datetime('now'), closed_at=?
+        WHERE id=?
+      `).run(newType, newTitle, newDescription, newStatus, newPriority,
+             newOpenedBy, newAssignedTo, newComponentId, newClosedAt, id);
+    }
 
     const updated = db.prepare(`
-      SELECT i.*, u1.name AS opened_by_name, u2.name AS assigned_to_name, c.name AS component_name
+      SELECT i.*, u1.name AS opened_by_name, u2.name AS assigned_to_name, c.name AS component_name,
+        (SELECT COUNT(*) FROM item_attachments ia WHERE ia.item_id = i.id) AS attachment_count
       FROM items i
       LEFT JOIN users u1 ON u1.id = i.opened_by
       LEFT JOIN users u2 ON u2.id = i.assigned_to
@@ -149,6 +223,78 @@ app.delete('/api/items/:id', (req, res) => {
     if (!existing) return fail(res, 'Item not found.', 404);
     db.prepare('DELETE FROM items WHERE id = ?').run(id);
     ok(res, { id });
+  } catch (e) {
+    fail(res, e.message, 500);
+  }
+});
+
+// ─── Attachments ──────────────────────────────────────────────────────────────
+
+app.post('/api/items/:id/attachments', upload.single('file'), (req, res) => {
+  try {
+    const db = getDb();
+    const itemId = parseInt(req.params.id, 10);
+    const item = db.prepare('SELECT id FROM items WHERE id = ?').get(itemId);
+    if (!item) {
+      if (req.file) fs.unlink(path.join(UPLOADS_DIR, req.file.filename), () => {});
+      return fail(res, 'Item not found.', 404);
+    }
+    if (!req.file) return fail(res, 'No file uploaded.');
+
+    const result = db.prepare(`
+      INSERT INTO item_attachments (item_id, filename, original_name, mimetype, size)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(itemId, req.file.filename, req.file.originalname, req.file.mimetype, req.file.size);
+
+    const att = db.prepare('SELECT * FROM item_attachments WHERE id = ?').get(result.lastInsertRowid);
+    ok(res, att);
+  } catch (e) {
+    if (req.file) fs.unlink(path.join(UPLOADS_DIR, req.file.filename), () => {});
+    fail(res, e.message, 500);
+  }
+});
+
+app.get('/api/items/:id/attachments', (req, res) => {
+  try {
+    const db = getDb();
+    const itemId = parseInt(req.params.id, 10);
+    const atts = db.prepare('SELECT * FROM item_attachments WHERE item_id = ? ORDER BY created_at DESC').all(itemId);
+    ok(res, atts);
+  } catch (e) {
+    fail(res, e.message, 500);
+  }
+});
+
+app.delete('/api/attachments/:id', (req, res) => {
+  try {
+    const db = getDb();
+    const id = parseInt(req.params.id, 10);
+    const att = db.prepare('SELECT * FROM item_attachments WHERE id = ?').get(id);
+    if (!att) return fail(res, 'Attachment not found.', 404);
+
+    const filePath = path.join(UPLOADS_DIR, att.filename);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+    db.prepare('DELETE FROM item_attachments WHERE id = ?').run(id);
+    ok(res, { id });
+  } catch (e) {
+    fail(res, e.message, 500);
+  }
+});
+
+app.get('/api/attachments/:id/file', (req, res) => {
+  try {
+    const db = getDb();
+    const id = parseInt(req.params.id, 10);
+    const att = db.prepare('SELECT * FROM item_attachments WHERE id = ?').get(id);
+    if (!att) return fail(res, 'Attachment not found.', 404);
+
+    const filePath = path.resolve(path.join(__dirname, 'uploads', att.filename));
+    if (!fs.existsSync(filePath)) return fail(res, 'File not found on disk.', 404);
+
+    res.setHeader('Content-Type', att.mimetype);
+    res.setHeader('Content-Disposition', `inline; filename="${att.original_name}"`);
+    res.sendFile(filePath);
   } catch (e) {
     fail(res, e.message, 500);
   }
