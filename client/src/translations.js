@@ -94,6 +94,10 @@ const translations = {
     configNameRequired:   (label) => `${label} name is required.`,
     configDeleteConfirm:  (name) => `Delete "${name}"? This will fail if it is in use.`,
     configEmpty:          (title) => `No ${title.toLowerCase()} yet.`,
+    configEmail:          'Email',
+    configEmailPlaceholder: 'Enter email address (optional)...',
+    configEdit:           'Edit',
+    configSave:           'Save',
 
     // Report panel
     reportTitle:       'Generate Report',
@@ -231,6 +235,10 @@ const translations = {
     configNameRequired:   (label) => `שם ה${label} נדרש.`,
     configDeleteConfirm:  (name) => `למחוק "${name}"? הפעולה תיכשל אם הפריט בשימוש.`,
     configEmpty:          (title) => `אין ${title} עדיין.`,
+    configEmail:          'אימייל',
+    configEmailPlaceholder: 'הזן כתובת אימייל (אופציונלי)...',
+    configEdit:           'ערוך',
+    configSave:           'שמור',
 
     // Report panel
     reportTitle:       'צור דוח',

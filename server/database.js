@@ -63,10 +63,15 @@ function createSchema() {
 
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
-      id   INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE
+      id    INTEGER PRIMARY KEY AUTOINCREMENT,
+      name  TEXT NOT NULL UNIQUE,
+      email TEXT NOT NULL DEFAULT ''
     );
   `);
+
+  // Add email column to existing databases that were created before this column existed
+  try { db.run(`ALTER TABLE users ADD COLUMN email TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+
 
   db.run(`
     CREATE TABLE IF NOT EXISTS components (

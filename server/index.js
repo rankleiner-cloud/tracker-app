@@ -1,7 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
 const path    = require('path');
-const { getDb, initDb } = require('./database');
+const { getDb, initDb }         = require('./database');
+const { startScheduler }        = require('./emailScheduler');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -157,7 +159,7 @@ app.delete('/api/items/:id', (req, res) => {
 app.get('/api/users', (req, res) => {
   try {
     const db = getDb();
-    ok(res, db.prepare('SELECT * FROM users ORDER BY name').all());
+    ok(res, db.prepare('SELECT id, name, email FROM users ORDER BY name').all());
   } catch (e) {
     fail(res, e.message, 500);
   }
@@ -166,10 +168,32 @@ app.get('/api/users', (req, res) => {
 app.post('/api/users', (req, res) => {
   try {
     const db = getDb();
-    const { name } = req.body;
+    const { name, email = '' } = req.body;
     if (!name || !name.trim()) return fail(res, 'Name is required.');
-    const result = db.prepare('INSERT INTO users (name) VALUES (?)').run(name.trim());
-    ok(res, { id: result.lastInsertRowid, name: name.trim() });
+    const result = db.prepare('INSERT INTO users (name, email) VALUES (?, ?)').run(name.trim(), email.trim());
+    ok(res, { id: result.lastInsertRowid, name: name.trim(), email: email.trim() });
+  } catch (e) {
+    if (e.message && e.message.includes('UNIQUE'))
+      return fail(res, 'A user with that name already exists.');
+    fail(res, e.message, 500);
+  }
+});
+
+app.put('/api/users/:id', (req, res) => {
+  try {
+    const db = getDb();
+    const id = parseInt(req.params.id, 10);
+    const existing = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
+    if (!existing) return fail(res, 'User not found.', 404);
+
+    const { name, email } = req.body;
+    if (name !== undefined && !name.trim()) return fail(res, 'Name cannot be empty.');
+
+    const newName  = name  !== undefined ? name.trim()  : existing.name;
+    const newEmail = email !== undefined ? email.trim() : (existing.email || '');
+
+    db.prepare('UPDATE users SET name=?, email=? WHERE id=?').run(newName, newEmail, id);
+    ok(res, { id, name: newName, email: newEmail });
   } catch (e) {
     if (e.message && e.message.includes('UNIQUE'))
       return fail(res, 'A user with that name already exists.');
@@ -250,6 +274,7 @@ initDb()
     app.listen(PORT, () => {
       console.log(`Tracker server running on http://localhost:${PORT}`);
     });
+    startScheduler();
   })
   .catch(err => {
     console.error('Failed to initialise database:', err);

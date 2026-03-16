@@ -109,12 +109,23 @@ export default function App() {
 
   // ── user CRUD ──────────────────────────────────────────────────────────────
 
-  const handleAddUser = async (name) => {
+  const handleAddUser = async (name, email) => {
     const user = await apiFetch('/api/users', {
       method: 'POST',
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, email }),
     });
     setUsers(prev => [...prev, user].sort((a, b) => a.name.localeCompare(b.name)));
+    return user;
+  };
+
+  const handleEditUser = async (id, name, email) => {
+    const user = await apiFetch(`/api/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name, email }),
+    });
+    setUsers(prev =>
+      prev.map(u => u.id === user.id ? user : u).sort((a, b) => a.name.localeCompare(b.name))
+    );
     return user;
   };
 
@@ -284,6 +295,7 @@ export default function App() {
             users={users}
             components={components}
             onAddUser={handleAddUser}
+            onEditUser={handleEditUser}
             onDeleteUser={handleDeleteUser}
             onAddComponent={handleAddComponent}
             onDeleteComponent={handleDeleteComponent}
