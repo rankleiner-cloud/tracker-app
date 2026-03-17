@@ -43,8 +43,11 @@ export default function App() {
     status:      'all',
     priority:    'all',
     assigned_to: 'all',
+    component:   'all',
     search:      '',
   });
+
+  const [sortDue, setSortDue] = useState(null); // null | 'asc' | 'desc'
 
   // ── load all data ──────────────────────────────────────────────────────────
 
@@ -104,6 +107,7 @@ export default function App() {
       status: item.status, priority: item.priority,
       opened_by: item.opened_by, assigned_to: item.assigned_to,
       component_id: item.component_id,
+      due_date: item.due_date,
     });
     setFormOpen(true);
   };
@@ -174,8 +178,22 @@ export default function App() {
     ? parseInt(view.replace('component-', ''), 10)
     : null;
 
-  const filteredItems = items.filter(item => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const sevenDaysLater = new Date(today);
+  sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+
+  let filteredItems = items.filter(item => {
+    // Due-soon tab: non-closed items with due date <= today+7
+    if (view === 'due-soon') {
+      if (!item.due_date) return false;
+      if (item.status === 'closed') return false;
+      const due = new Date(item.due_date);
+      due.setHours(0, 0, 0, 0);
+      if (due > sevenDaysLater) return false;
+    }
     if (activeComponentId !== null && item.component_id !== activeComponentId) return false;
+    if (filters.component !== 'all' && String(item.component_id) !== filters.component) return false;
     if (filters.type     !== 'all' && item.type     !== filters.type)     return false;
     if (filters.status   !== 'all' && item.status   !== filters.status)   return false;
     if (filters.priority !== 'all' && item.priority !== filters.priority) return false;
@@ -193,11 +211,28 @@ export default function App() {
     return true;
   });
 
+  if (sortDue === 'asc') {
+    filteredItems = [...filteredItems].sort((a, b) => {
+      if (!a.due_date && !b.due_date) return 0;
+      if (!a.due_date) return 1;
+      if (!b.due_date) return -1;
+      return new Date(a.due_date) - new Date(b.due_date);
+    });
+  } else if (sortDue === 'desc') {
+    filteredItems = [...filteredItems].sort((a, b) => {
+      if (!a.due_date && !b.due_date) return 0;
+      if (!a.due_date) return 1;
+      if (!b.due_date) return -1;
+      return new Date(b.due_date) - new Date(a.due_date);
+    });
+  }
+
   // ── nav items ──────────────────────────────────────────────────────────────
 
   const navItems = [
     { key: 'items',  label: t('navItems') },
     ...components.map(c => ({ key: `component-${c.id}`, label: c.name, isComponent: true })),
+    { key: 'due-soon', label: t('navDueSoon') },
     { key: 'report', label: t('navReport') },
     { key: 'config', label: t('navConfig') },
   ];
@@ -293,12 +328,13 @@ export default function App() {
           </div>
         )}
 
-        {!loading && !error && (view === 'items' || view.startsWith('component-')) && (
+        {!loading && !error && (view === 'items' || view.startsWith('component-') || view === 'due-soon') && (
           <>
             <ItemFilters
               filters={filters}
               onFilterChange={setFilters}
               users={users}
+              components={components}
             />
             <ItemList
               items={filteredItems}
@@ -310,6 +346,8 @@ export default function App() {
                 ? items.filter(i => i.component_id === activeComponentId).length
                 : items.length}
               onOpenAttachments={(item) => setAttachmentsItem(item)}
+              sortDue={sortDue}
+              onSortDue={(val) => setSortDue(val)}
             />
           </>
         )}

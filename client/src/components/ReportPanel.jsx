@@ -19,7 +19,7 @@ function buildReportHTML(items, filters, users, components, t, lang) {
   // Build filter summary labels
   const filterLines = [];
   if (filters.type      !== 'all') filterLines.push(`${t('reportHTMLFilterType')}: ${
-    { requirement: t('typeRequirement'), bug: t('typeBug'), improvement: t('typeImprovement') }[filters.type] || filters.type
+    { requirement: t('typeRequirement'), bug: t('typeBug'), improvement: t('typeImprovement'), 'system-requirement': t('typeSystemReq') }[filters.type] || filters.type
   }`);
   if (filters.status    !== 'all') filterLines.push(`${t('reportHTMLFilterStatus')}: ${
     { 'open-new': t('statusOpenNew'), open: t('statusOpen'), rejected: t('statusRejected'), closed: t('statusClosed') }[filters.status] || filters.status
@@ -52,9 +52,10 @@ function buildReportHTML(items, filters, users, components, t, lang) {
   }[p] || p);
 
   const typeLabel = (type) => ({
-    requirement: t('typeRequirement'),
-    bug:         t('typeBug'),
-    improvement: t('typeImprovement'),
+    requirement:          t('typeRequirement'),
+    bug:                  t('typeBug'),
+    improvement:          t('typeImprovement'),
+    'system-requirement': t('typeSystemReq'),
   }[type] || type);
 
   const statusLabel = (status) => ({
@@ -88,6 +89,7 @@ function buildReportHTML(items, filters, users, components, t, lang) {
         <td>${item.component_name || '—'}</td>
         <td>${formatDate(item.created_at)}</td>
         <td>${item.status === 'closed' && item.closed_at ? formatDate(item.closed_at) : '—'}</td>
+        <td>${item.due_date ? formatDate(item.due_date) : '—'}</td>
       </tr>`;
   }).join('');
 
@@ -166,10 +168,11 @@ function buildReportHTML(items, filters, users, components, t, lang) {
         <th>${t('reportHTMLColComponent')}</th>
         <th>${t('reportHTMLColCreated')}</th>
         <th>${t('reportColClosedOn')}</th>
+        <th>${t('reportHTMLColDueDate')}</th>
       </tr>
     </thead>
     <tbody>
-      ${rows || `<tr><td colspan="11" style="text-align:center;padding:30px;color:#9ca3af">${t('reportHTMLNoItems')}</td></tr>`}
+      ${rows || `<tr><td colspan="12" style="text-align:center;padding:30px;color:#9ca3af">${t('reportHTMLNoItems')}</td></tr>`}
     </tbody>
   </table>
   <div class="count">${t('reportHTMLCount', items.length)}</div>
@@ -268,6 +271,7 @@ export default function ReportPanel({ items, users, components }) {
               <option value="requirement">{t('typeRequirement')}</option>
               <option value="bug">{t('typeBug')}</option>
               <option value="improvement">{t('typeImprovement')}</option>
+              <option value="system-requirement">{t('typeSystemReq')}</option>
             </select>
           </div>
 

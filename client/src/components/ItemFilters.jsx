@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLanguage } from '../LanguageContext.jsx';
 
-export default function ItemFilters({ filters, onFilterChange, users }) {
+export default function ItemFilters({ filters, onFilterChange, users, components }) {
   const { t } = useLanguage();
   const set = (key, value) => onFilterChange(prev => ({ ...prev, [key]: value }));
 
@@ -28,7 +28,8 @@ export default function ItemFilters({ filters, onFilterChange, users }) {
 
   const hasActiveFilters =
     filters.type !== 'all' || filters.status !== 'all' ||
-    filters.priority !== 'all' || filters.assigned_to !== 'all' || filters.search !== '';
+    filters.priority !== 'all' || filters.assigned_to !== 'all' ||
+    filters.component !== 'all' || filters.search !== '';
 
   return (
     <div style={{
@@ -100,13 +101,24 @@ export default function ItemFilters({ filters, onFilterChange, users }) {
         </select>
       </div>
 
+      {/* Component */}
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <span style={labelStyle}>{t('filterComponent')}</span>
+        <select value={filters.component} onChange={e => set('component', e.target.value)} style={selectStyle}>
+          <option value="all">{t('filterAllComponents')}</option>
+          {components.map(c => (
+            <option key={c.id} value={String(c.id)}>{c.name}</option>
+          ))}
+        </select>
+      </div>
+
       {/* Clear */}
       {hasActiveFilters && (
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <button
             className="btn btn-secondary btn-sm"
             onClick={() => onFilterChange({
-              type: 'all', status: 'all', priority: 'all', assigned_to: 'all', search: '',
+              type: 'all', status: 'all', priority: 'all', assigned_to: 'all', component: 'all', search: '',
             })}
           >
             {t('filterClear')}

@@ -10,6 +10,7 @@ const INITIAL = {
   opened_by:   '',
   assigned_to: '',
   component_id: '',
+  due_date:    '',
 };
 
 export default function ItemForm({ item, prefill, users, components, onSave, onClose }) {
@@ -29,6 +30,7 @@ export default function ItemForm({ item, prefill, users, components, onSave, onC
         opened_by:    item.opened_by    != null ? String(item.opened_by)    : '',
         assigned_to:  item.assigned_to  != null ? String(item.assigned_to)  : '',
         component_id: item.component_id != null ? String(item.component_id) : '',
+        due_date: item.due_date ? item.due_date.slice(0, 10) : '',
       });
     } else if (prefill) {
       setForm({
@@ -40,6 +42,7 @@ export default function ItemForm({ item, prefill, users, components, onSave, onC
         opened_by:    prefill.opened_by    != null ? String(prefill.opened_by)    : '',
         assigned_to:  prefill.assigned_to  != null ? String(prefill.assigned_to)  : '',
         component_id: prefill.component_id != null ? String(prefill.component_id) : '',
+        due_date: prefill.due_date ? prefill.due_date.slice(0, 10) : '',
       });
     } else {
       setForm(INITIAL);
@@ -67,6 +70,7 @@ export default function ItemForm({ item, prefill, users, components, onSave, onC
         opened_by:    Number(form.opened_by),
         assigned_to:  form.assigned_to  ? Number(form.assigned_to)  : null,
         component_id: form.component_id ? Number(form.component_id) : null,
+        due_date: form.due_date || null,
       });
     } catch (e) {
       setError(e.message);
@@ -109,6 +113,7 @@ export default function ItemForm({ item, prefill, users, components, onSave, onC
               <option value="requirement">{t('typeRequirement')}</option>
               <option value="bug">{t('typeBug')}</option>
               <option value="improvement">{t('typeImprovement')}</option>
+              <option value="system-requirement">{t('typeSystemReq')}</option>
             </select>
           </div>
 
@@ -190,6 +195,28 @@ export default function ItemForm({ item, prefill, users, components, onSave, onC
               ))}
             </select>
           </div>
+
+          {/* Due Date */}
+          <div className="form-group">
+            <label>{t('formDueDate')}</label>
+            <input
+              type="date"
+              value={form.due_date}
+              onChange={e => set('due_date', e.target.value)}
+            />
+          </div>
+
+          {item && (
+            <div className="form-group">
+              <label style={{ color: '#9ca3af' }}>{t('formOpenedOn')}</label>
+              <input
+                type="text"
+                value={item.created_at ? new Date(item.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                readOnly
+                style={{ background: '#f9fafb', color: '#9ca3af', cursor: 'default' }}
+              />
+            </div>
+          )}
 
           {/* Buttons */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>

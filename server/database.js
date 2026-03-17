@@ -93,12 +93,14 @@ function createSchema() {
       component_id INTEGER REFERENCES components(id),
       created_at   TEXT DEFAULT (datetime('now')),
       updated_at   TEXT DEFAULT (datetime('now')),
-      closed_at    TEXT DEFAULT NULL
+      closed_at    TEXT DEFAULT NULL,
+      due_date     TEXT DEFAULT NULL
     );
   `);
 
   // Add closed_at column to existing databases
   try { db.run(`ALTER TABLE items ADD COLUMN closed_at TEXT DEFAULT NULL`); } catch (_) {}
+  try { db.run(`ALTER TABLE items ADD COLUMN due_date TEXT DEFAULT NULL`); } catch (_) {}
 
   db.run(`
     CREATE TABLE IF NOT EXISTS item_attachments (

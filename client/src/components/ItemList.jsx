@@ -54,13 +54,26 @@ function formatDate(dt) {
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewItem, totalCount, onOpenAttachments }) {
+function getDueStatus(dueDate) {
+  if (!dueDate) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);
+  const diffDays = (due - today) / (1000 * 60 * 60 * 24);
+  if (diffDays < 0)  return 'overdue';
+  if (diffDays <= 7) return 'soon';
+  return 'ok';
+}
+
+export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewItem, totalCount, onOpenAttachments, sortDue, onSortDue }) {
   const { t } = useLanguage();
 
   const typeLabel = (type) => ({
-    requirement: t('typeRequirement'),
-    bug:         t('typeBug'),
-    improvement: t('typeImprovement'),
+    requirement:        t('typeRequirement'),
+    bug:                t('typeBug'),
+    improvement:        t('typeImprovement'),
+    'system-requirement': t('typeSystemReq'),
   }[type] || type);
 
   const statusLabel = (status) => ({
@@ -107,9 +120,18 @@ export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewIt
             {items.length}{items.length !== totalCount ? ` / ${totalCount}` : ''}
           </span>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={onNewItem}>
-          {t('newItem')}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            className={`btn btn-sm ${sortDue ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => onSortDue(sortDue === null ? 'asc' : sortDue === 'asc' ? 'desc' : null)}
+            title="Sort by due date"
+          >
+            {sortDue === 'asc' ? t('sortDueAsc') : sortDue === 'desc' ? t('sortDueDesc') : t('sortDueAsc')}
+          </button>
+          <button className="btn btn-primary btn-sm" onClick={onNewItem}>
+            {t('newItem')}
+          </button>
+        </div>
       </div>
 
       {/* Table */}
@@ -125,7 +147,7 @@ export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewIt
               <th>{t('colOpenedBy')}</th>
               <th>{t('colAssignedTo')}</th>
               <th>{t('colComponent')}</th>
-              <th>{t('colCreated')}</th>
+              <th>{t('colDueDate')}</th>
               <th style={{ width: 90 }}>{t('colActions')}</th>
             </tr>
           </thead>
@@ -177,7 +199,19 @@ export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewIt
                   <td style={{ fontSize: '0.88rem' }}>{item.opened_by_name || '—'}</td>
                   <td style={{ fontSize: '0.88rem' }}>{item.assigned_to_name || <span style={{ color: '#d1d5db' }}>—</span>}</td>
                   <td style={{ fontSize: '0.88rem' }}>{item.component_name || <span style={{ color: '#d1d5db' }}>—</span>}</td>
-                  <td style={{ fontSize: '0.82rem', color: '#6b7280' }}>{formatDate(item.created_at)}</td>
+                  <td style={{ fontSize: '0.82rem', position: 'relative' }}>
+                    {(() => {
+                      const status = getDueStatus(item.due_date);
+                      const color = status === 'overdue' ? '#7c3aed' : '#6b7280';
+                      return (
+                        <span style={{ color, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          {status === 'overdue' && <span title="Overdue" style={{ fontSize: '1rem' }}>⚠️</span>}
+                          {status === 'soon'    && <span title="Due soon" style={{ fontSize: '1rem' }}>💡</span>}
+                          {item.due_date ? formatDate(item.due_date) : <span style={{ color: '#d1d5db' }}>—</span>}
+                        </span>
+                      );
+                    })()}
+                  </td>
                   <td>
                     <div style={{ display: 'flex', gap: 4 }}>
                       <button
