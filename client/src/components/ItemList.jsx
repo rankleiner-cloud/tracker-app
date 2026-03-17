@@ -66,7 +66,7 @@ function getDueStatus(dueDate) {
   return 'ok';
 }
 
-export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewItem, totalCount, onOpenAttachments, sortDue, onSortDue }) {
+export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewItem, totalCount, onOpenAttachments, sortDue, onSortDue, isClosedView }) {
   const { t } = useLanguage();
 
   const typeLabel = (type) => ({
@@ -106,7 +106,7 @@ export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewIt
       }}>
         <div>
           <span style={{ fontWeight: 700, fontSize: '1rem', color: '#1a1a2e' }}>
-            {t('itemsTitle')}
+            {isClosedView ? t('navClosed') : t('itemsTitle')}
           </span>
           <span style={{
             marginInlineStart: 10,
@@ -121,16 +121,20 @@ export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewIt
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button
-            className={`btn btn-sm ${sortDue ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => onSortDue(sortDue === null ? 'asc' : sortDue === 'asc' ? 'desc' : null)}
-            title="Sort by due date"
-          >
-            {sortDue === 'asc' ? t('sortDueAsc') : sortDue === 'desc' ? t('sortDueDesc') : t('sortDueAsc')}
-          </button>
-          <button className="btn btn-primary btn-sm" onClick={onNewItem}>
-            {t('newItem')}
-          </button>
+          {!isClosedView && (
+            <button
+              className={`btn btn-sm ${sortDue ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => onSortDue(sortDue === null ? 'asc' : sortDue === 'asc' ? 'desc' : null)}
+              title="Sort by due date"
+            >
+              {sortDue === 'asc' ? t('sortDueAsc') : sortDue === 'desc' ? t('sortDueDesc') : t('sortDueAsc')}
+            </button>
+          )}
+          {!isClosedView && (
+            <button className="btn btn-primary btn-sm" onClick={onNewItem}>
+              {t('newItem')}
+            </button>
+          )}
         </div>
       </div>
 
@@ -147,7 +151,7 @@ export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewIt
               <th>{t('colOpenedBy')}</th>
               <th>{t('colAssignedTo')}</th>
               <th>{t('colComponent')}</th>
-              <th>{t('colDueDate')}</th>
+              <th>{isClosedView ? t('reportColClosedOn') : t('colDueDate')}</th>
               <th style={{ width: 90 }}>{t('colActions')}</th>
             </tr>
           </thead>
@@ -199,14 +203,18 @@ export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewIt
                   <td style={{ fontSize: '0.88rem' }}>{item.opened_by_name || '—'}</td>
                   <td style={{ fontSize: '0.88rem' }}>{item.assigned_to_name || <span style={{ color: '#d1d5db' }}>—</span>}</td>
                   <td style={{ fontSize: '0.88rem' }}>{item.component_name || <span style={{ color: '#d1d5db' }}>—</span>}</td>
-                  <td style={{ fontSize: '0.82rem', position: 'relative' }}>
-                    {(() => {
-                      const status = getDueStatus(item.due_date);
-                      const color = status === 'overdue' ? '#7c3aed' : '#6b7280';
+                  <td style={{ fontSize: '0.82rem' }}>
+                    {isClosedView ? (
+                      <span style={{ color: '#6b7280' }}>
+                        {item.closed_at ? formatDate(item.closed_at) : <span style={{ color: '#d1d5db' }}>—</span>}
+                      </span>
+                    ) : (() => {
+                      const ds = getDueStatus(item.due_date);
+                      const color = ds === 'overdue' ? '#7c3aed' : '#6b7280';
                       return (
                         <span style={{ color, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          {status === 'overdue' && <span title="Overdue" style={{ fontSize: '1rem' }}>⚠️</span>}
-                          {status === 'soon'    && <span title="Due soon" style={{ fontSize: '1rem' }}>💡</span>}
+                          {ds === 'overdue' && <span title="Overdue" style={{ fontSize: '1rem' }}>⚠️</span>}
+                          {ds === 'soon'    && <span title="Due soon" style={{ fontSize: '1rem' }}>💡</span>}
                           {item.due_date ? formatDate(item.due_date) : <span style={{ color: '#d1d5db' }}>—</span>}
                         </span>
                       );

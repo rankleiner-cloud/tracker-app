@@ -184,18 +184,24 @@ export default function App() {
   sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
 
   let filteredItems = items.filter(item => {
-    // Due-soon tab: non-closed items with due date <= today+7
-    if (view === 'due-soon') {
-      if (!item.due_date) return false;
+    // Closed tab: only closed items
+    if (view === 'closed') {
+      if (item.status !== 'closed') return false;
+    } else {
+      // All other views: never show closed items
       if (item.status === 'closed') return false;
-      const due = new Date(item.due_date);
-      due.setHours(0, 0, 0, 0);
-      if (due > sevenDaysLater) return false;
+      // Due-soon tab: items with due date <= today+7
+      if (view === 'due-soon') {
+        if (!item.due_date) return false;
+        const due = new Date(item.due_date);
+        due.setHours(0, 0, 0, 0);
+        if (due > sevenDaysLater) return false;
+      }
     }
     if (activeComponentId !== null && item.component_id !== activeComponentId) return false;
     if (filters.component !== 'all' && String(item.component_id) !== filters.component) return false;
     if (filters.type     !== 'all' && item.type     !== filters.type)     return false;
-    if (filters.status   !== 'all' && item.status   !== filters.status)   return false;
+    if (view !== 'closed' && filters.status !== 'all' && item.status !== filters.status) return false;
     if (filters.priority !== 'all' && item.priority !== filters.priority) return false;
     if (filters.assigned_to !== 'all') {
       if (filters.assigned_to === 'unassigned') {
@@ -233,6 +239,7 @@ export default function App() {
     { key: 'items',  label: t('navItems') },
     ...components.map(c => ({ key: `component-${c.id}`, label: c.name, isComponent: true })),
     { key: 'due-soon', label: t('navDueSoon') },
+    { key: 'closed',   label: t('navClosed') },
     { key: 'report', label: t('navReport') },
     { key: 'config', label: t('navConfig') },
   ];
@@ -328,7 +335,7 @@ export default function App() {
           </div>
         )}
 
-        {!loading && !error && (view === 'items' || view.startsWith('component-') || view === 'due-soon') && (
+        {!loading && !error && (view === 'items' || view.startsWith('component-') || view === 'due-soon' || view === 'closed') && (
           <>
             <ItemFilters
               filters={filters}
@@ -342,12 +349,17 @@ export default function App() {
               onDelete={handleDeleteItem}
               onDuplicate={openDuplicate}
               onNewItem={openCreate}
-              totalCount={activeComponentId !== null
-                ? items.filter(i => i.component_id === activeComponentId).length
-                : items.length}
+              totalCount={
+                view === 'closed'
+                  ? items.filter(i => i.status === 'closed').length
+                  : activeComponentId !== null
+                    ? items.filter(i => i.component_id === activeComponentId && i.status !== 'closed').length
+                    : items.filter(i => i.status !== 'closed').length
+              }
               onOpenAttachments={(item) => setAttachmentsItem(item)}
               sortDue={sortDue}
               onSortDue={(val) => setSortDue(val)}
+              isClosedView={view === 'closed'}
             />
           </>
         )}
