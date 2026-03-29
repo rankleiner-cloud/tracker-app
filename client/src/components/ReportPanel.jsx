@@ -22,7 +22,7 @@ function buildReportHTML(items, filters, users, components, t, lang) {
     { requirement: t('typeRequirement'), bug: t('typeBug'), improvement: t('typeImprovement'), 'system-requirement': t('typeSystemReq') }[filters.type] || filters.type
   }`);
   if (filters.status    !== 'all') filterLines.push(`${t('reportHTMLFilterStatus')}: ${
-    { 'open-new': t('statusOpenNew'), open: t('statusOpen'), rejected: t('statusRejected'), closed: t('statusClosed') }[filters.status] || filters.status
+    { 'open-new': t('statusOpenNew'), open: t('statusOpen'), 'for-test': t('statusForTest'), rejected: t('statusRejected'), closed: t('statusClosed') }[filters.status] || filters.status
   }`);
   if (filters.opened_by !== 'all') {
     const u = users.find(u => String(u.id) === filters.opened_by);
@@ -61,6 +61,7 @@ function buildReportHTML(items, filters, users, components, t, lang) {
   const statusLabel = (status) => ({
     'open-new': t('statusOpenNew'),
     open:       t('statusOpen'),
+    'for-test': t('statusForTest'),
     rejected:   t('statusRejected'),
     closed:     t('statusClosed'),
   }[status] || status);
@@ -282,6 +283,7 @@ export default function ReportPanel({ items, users, components }) {
               <option value="all">{t('reportAllStatuses')}</option>
               <option value="open-new">{t('statusOpenNew')}</option>
               <option value="open">{t('statusOpen')}</option>
+              <option value="for-test">{t('statusForTest')}</option>
               <option value="rejected">{t('statusRejected')}</option>
               <option value="closed">{t('statusClosed')}</option>
             </select>

@@ -147,6 +147,7 @@ export default function ItemForm({ item, prefill, users, components, onSave, onC
               <select value={form.status} onChange={e => set('status', e.target.value)}>
                 <option value="open-new">{t('statusOpenNew')}</option>
                 <option value="open">{t('statusOpen')}</option>
+                <option value="for-test">{t('statusForTest')}</option>
                 <option value="rejected">{t('statusRejected')}</option>
                 <option value="closed">{t('statusClosed')}</option>
               </select>

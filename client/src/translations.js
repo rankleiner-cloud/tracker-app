@@ -20,6 +20,7 @@ const translations = {
     // Statuses
     statusOpenNew:   'Open-New',
     statusOpen:      'Open',
+    statusForTest:   'For Test',
     statusRejected:  'Rejected',
     statusClosed:    'Closed',
 
@@ -184,6 +185,7 @@ const translations = {
     // Statuses
     statusOpenNew:   'פתוח-חדש',
     statusOpen:      'פתוח',
+    statusForTest:   'לבדיקה',
     statusRejected:  'נדחה',
     statusClosed:    'סגור',
 

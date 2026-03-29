@@ -224,6 +224,14 @@ app.delete('/api/items/:id', (req, res) => {
     const id = parseInt(req.params.id, 10);
     const existing = db.prepare('SELECT id FROM items WHERE id = ?').get(id);
     if (!existing) return fail(res, 'Item not found.', 404);
+    // Delete attachment files from disk before removing the item
+    const atts = db.prepare('SELECT filename FROM item_attachments WHERE item_id = ?').all(id);
+    for (const att of atts) {
+      if (att.filename) {
+        const fp = path.join(UPLOADS_DIR, att.filename);
+        if (fs.existsSync(fp)) fs.unlinkSync(fp);
+      }
+    }
     db.prepare('DELETE FROM items WHERE id = ?').run(id);
     ok(res, { id });
   } catch (e) {

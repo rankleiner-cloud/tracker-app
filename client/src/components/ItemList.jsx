@@ -79,6 +79,7 @@ export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewIt
   const statusLabel = (status) => ({
     'open-new': t('statusOpenNew'),
     open:       t('statusOpen'),
+    'for-test': t('statusForTest'),
     rejected:   t('statusRejected'),
     closed:     t('statusClosed'),
   }[status] || status);

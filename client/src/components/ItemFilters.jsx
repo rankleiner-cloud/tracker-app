@@ -73,6 +73,7 @@ export default function ItemFilters({ filters, onFilterChange, users, components
           <option value="all">{t('filterAllStatuses')}</option>
           <option value="open-new">{t('statusOpenNew')}</option>
           <option value="open">{t('statusOpen')}</option>
+          <option value="for-test">{t('statusForTest')}</option>
           <option value="rejected">{t('statusRejected')}</option>
           <option value="closed">{t('statusClosed')}</option>
         </select>
