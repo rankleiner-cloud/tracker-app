@@ -69,6 +69,14 @@ function getDueStatus(dueDate) {
 export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewItem, totalCount, onOpenAttachments, sortDue, onSortDue, isClosedView }) {
   const { t } = useLanguage();
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const isFutureItem = (item) => {
+    const d = new Date(item.start_date || item.created_at);
+    d.setHours(0, 0, 0, 0);
+    return d > today;
+  };
+
   const typeLabel = (type) => ({
     requirement:        t('typeRequirement'),
     bug:                t('typeBug'),
@@ -152,6 +160,7 @@ export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewIt
               <th>{t('colOpenedBy')}</th>
               <th>{t('colAssignedTo')}</th>
               <th>{t('colComponent')}</th>
+              <th>{t('colStartDate')}</th>
               <th>{isClosedView ? t('reportColClosedOn') : t('colDueDate')}</th>
               <th style={{ width: 90 }}>{t('colActions')}</th>
             </tr>
@@ -159,7 +168,7 @@ export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewIt
           <tbody>
             {items.length === 0 ? (
               <tr>
-                <td colSpan={10} style={{ textAlign: 'center', padding: '40px 0', color: '#9ca3af' }}>
+                <td colSpan={11} style={{ textAlign: 'center', padding: '40px 0', color: '#9ca3af' }}>
                   {t('noItems')}
                 </td>
               </tr>
@@ -168,7 +177,7 @@ export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewIt
                 <tr
                   key={item.id}
                   style={{
-                    background: PRIORITY_ROW_COLORS[item.priority] || '#fff',
+                    background: isFutureItem(item) ? '#eff6ff' : (PRIORITY_ROW_COLORS[item.priority] || '#fff'),
                     transition: 'filter 0.1s',
                   }}
                   onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(0.97)'; }}
@@ -204,6 +213,9 @@ export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewIt
                   <td style={{ fontSize: '0.88rem' }}>{item.opened_by_name || '—'}</td>
                   <td style={{ fontSize: '0.88rem' }}>{item.assigned_to_name || <span style={{ color: '#d1d5db' }}>—</span>}</td>
                   <td style={{ fontSize: '0.88rem' }}>{item.component_name || <span style={{ color: '#d1d5db' }}>—</span>}</td>
+                  <td style={{ fontSize: '0.82rem', color: '#6b7280' }}>
+                    {item.start_date ? formatDate(item.start_date) : <span style={{ color: '#d1d5db' }}>—</span>}
+                  </td>
                   <td style={{ fontSize: '0.82rem' }}>
                     {isClosedView ? (
                       <span style={{ color: '#6b7280' }}>

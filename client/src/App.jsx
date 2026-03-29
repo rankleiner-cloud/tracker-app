@@ -5,6 +5,7 @@ import ItemFilters       from './components/ItemFilters.jsx';
 import ConfigPanel       from './components/ConfigPanel.jsx';
 import ReportPanel       from './components/ReportPanel.jsx';
 import AttachmentsModal  from './components/AttachmentsModal.jsx';
+import GanttView         from './components/GanttView.jsx';
 import { useLanguage } from './LanguageContext.jsx';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -108,6 +109,7 @@ export default function App() {
       opened_by: item.opened_by, assigned_to: item.assigned_to,
       component_id: item.component_id,
       due_date: item.due_date,
+      start_date: item.start_date,
     });
     setFormOpen(true);
   };
@@ -183,14 +185,22 @@ export default function App() {
   const sevenDaysLater = new Date(today);
   sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
 
+  const isFutureItem = (item) => {
+    const d = new Date(item.start_date || item.created_at);
+    d.setHours(0, 0, 0, 0);
+    return d > today;
+  };
+
   let filteredItems = items.filter(item => {
-    // Closed tab: only closed items
     if (view === 'closed') {
       if (item.status !== 'closed') return false;
-    } else {
-      // All other views: never show closed items
+    } else if (view === 'future') {
       if (item.status === 'closed') return false;
-      // Due-soon tab: items with due date <= today+7
+      if (!isFutureItem(item)) return false;
+    } else {
+      if (item.status === 'closed') return false;
+      // due-soon and component views: hide future items
+      if ((view === 'due-soon' || view.startsWith('component-')) && isFutureItem(item)) return false;
       if (view === 'due-soon') {
         if (!item.due_date) return false;
         const due = new Date(item.due_date);
@@ -200,7 +210,7 @@ export default function App() {
     }
     if (activeComponentId !== null && item.component_id !== activeComponentId) return false;
     if (filters.component !== 'all' && String(item.component_id) !== filters.component) return false;
-    if (filters.type     !== 'all' && item.type     !== filters.type)     return false;
+    if (filters.type !== 'all' && item.type !== filters.type) return false;
     if (view !== 'closed' && filters.status !== 'all' && item.status !== filters.status) return false;
     if (filters.priority !== 'all' && item.priority !== filters.priority) return false;
     if (filters.assigned_to !== 'all') {
@@ -236,12 +246,14 @@ export default function App() {
   // ── nav items ──────────────────────────────────────────────────────────────
 
   const navItems = [
-    { key: 'items',  label: t('navItems') },
+    { key: 'items',    label: t('navItems') },
     ...components.map(c => ({ key: `component-${c.id}`, label: c.name, isComponent: true })),
+    { key: 'future',   label: t('navFutureItems') },
     { key: 'due-soon', label: t('navDueSoon') },
+    { key: 'gantt',    label: t('navGantt') },
     { key: 'closed',   label: t('navClosed') },
-    { key: 'report', label: t('navReport') },
-    { key: 'config', label: t('navConfig') },
+    { key: 'report',   label: t('navReport') },
+    { key: 'config',   label: t('navConfig') },
   ];
 
   // ── render ─────────────────────────────────────────────────────────────────
@@ -335,7 +347,7 @@ export default function App() {
           </div>
         )}
 
-        {!loading && !error && (view === 'items' || view.startsWith('component-') || view === 'due-soon' || view === 'closed') && (
+        {!loading && !error && (view === 'items' || view.startsWith('component-') || view === 'due-soon' || view === 'closed' || view === 'future') && (
           <>
             <ItemFilters
               filters={filters}
@@ -352,9 +364,11 @@ export default function App() {
               totalCount={
                 view === 'closed'
                   ? items.filter(i => i.status === 'closed').length
-                  : activeComponentId !== null
-                    ? items.filter(i => i.component_id === activeComponentId && i.status !== 'closed').length
-                    : items.filter(i => i.status !== 'closed').length
+                  : view === 'future'
+                    ? items.filter(i => i.status !== 'closed' && isFutureItem(i)).length
+                    : activeComponentId !== null
+                      ? items.filter(i => i.component_id === activeComponentId && i.status !== 'closed').length
+                      : items.filter(i => i.status !== 'closed').length
               }
               onOpenAttachments={(item) => setAttachmentsItem(item)}
               sortDue={sortDue}
@@ -362,6 +376,10 @@ export default function App() {
               isClosedView={view === 'closed'}
             />
           </>
+        )}
+
+        {!loading && !error && view === 'gantt' && (
+          <GanttView items={items} t={t} isRTL={isRTL} />
         )}
 
         {!loading && !error && view === 'report' && (

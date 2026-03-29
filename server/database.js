@@ -94,13 +94,15 @@ function createSchema() {
       created_at   TEXT DEFAULT (datetime('now')),
       updated_at   TEXT DEFAULT (datetime('now')),
       closed_at    TEXT DEFAULT NULL,
-      due_date     TEXT DEFAULT NULL
+      due_date     TEXT DEFAULT NULL,
+      start_date   TEXT DEFAULT NULL
     );
   `);
 
   // Add closed_at column to existing databases
   try { db.run(`ALTER TABLE items ADD COLUMN closed_at TEXT DEFAULT NULL`); } catch (_) {}
   try { db.run(`ALTER TABLE items ADD COLUMN due_date TEXT DEFAULT NULL`); } catch (_) {}
+  try { db.run(`ALTER TABLE items ADD COLUMN start_date TEXT DEFAULT NULL`); } catch (_) {}
 
   db.run(`
     CREATE TABLE IF NOT EXISTS item_attachments (

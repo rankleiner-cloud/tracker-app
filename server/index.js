@@ -76,6 +76,7 @@ app.get('/api/items', (req, res) => {
         i.updated_at,
         i.closed_at,
         i.due_date,
+        i.start_date,
         u1.name AS opened_by_name,
         u2.name AS assigned_to_name,
         c.name  AS component_name,
@@ -105,13 +106,14 @@ app.post('/api/items', (req, res) => {
       assigned_to  = null,
       component_id = null,
       due_date     = null,
+      start_date   = null,
     } = req.body;
 
     if (!title || !title.trim())   return fail(res, 'Title is required.');
     if (!opened_by)                return fail(res, 'Opened By is required.');
 
     const validTypes      = ['requirement', 'bug', 'improvement', 'system-requirement'];
-    const validStatuses   = ['open-new', 'open', 'rejected', 'closed'];
+    const validStatuses   = ['open-new', 'open', 'for-test', 'rejected', 'closed'];
     const validPriorities = ['high', 'medium', 'low'];
     if (!validTypes.includes(type))          return fail(res, 'Invalid type.');
     if (!validStatuses.includes(status))     return fail(res, 'Invalid status.');
@@ -122,16 +124,16 @@ app.post('/api/items', (req, res) => {
     let result;
     if (closedAt) {
       result = db.prepare(`
-        INSERT INTO items (type, title, description, status, priority, opened_by, assigned_to, component_id, due_date, closed_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        INSERT INTO items (type, title, description, status, priority, opened_by, assigned_to, component_id, due_date, start_date, closed_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
       `).run(type, title.trim(), description, status, priority,
-             opened_by, assigned_to || null, component_id || null, due_date || null);
+             opened_by, assigned_to || null, component_id || null, due_date || null, start_date || null);
     } else {
       result = db.prepare(`
-        INSERT INTO items (type, title, description, status, priority, opened_by, assigned_to, component_id, due_date)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO items (type, title, description, status, priority, opened_by, assigned_to, component_id, due_date, start_date)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(type, title.trim(), description, status, priority,
-             opened_by, assigned_to || null, component_id || null, due_date || null);
+             opened_by, assigned_to || null, component_id || null, due_date || null, start_date || null);
     }
 
     const newItem = db.prepare(`
@@ -159,7 +161,7 @@ app.put('/api/items/:id', (req, res) => {
 
     const {
       type, title, description, status, priority,
-      opened_by, assigned_to, component_id, due_date,
+      opened_by, assigned_to, component_id, due_date, start_date,
     } = req.body;
 
     if (title !== undefined && !title.trim()) return fail(res, 'Title cannot be empty.');
@@ -172,7 +174,8 @@ app.put('/api/items/:id', (req, res) => {
     const newOpenedBy    = opened_by   !== undefined ? opened_by     : current.opened_by;
     const newAssignedTo  = assigned_to  !== undefined ? (assigned_to  || null) : current.assigned_to;
     const newComponentId = component_id !== undefined ? (component_id || null) : current.component_id;
-    const newDueDate = due_date !== undefined ? (due_date || null) : current.due_date;
+    const newDueDate   = due_date   !== undefined ? (due_date   || null) : current.due_date;
+    const newStartDate = start_date !== undefined ? (start_date || null) : current.start_date;
 
     // Determine closed_at transition
     const wasClosing   = current.status !== 'closed' && newStatus === 'closed';
@@ -186,20 +189,20 @@ app.put('/api/items/:id', (req, res) => {
       db.prepare(`
         UPDATE items
         SET type=?, title=?, description=?, status=?, priority=?,
-            opened_by=?, assigned_to=?, component_id=?, due_date=?,
+            opened_by=?, assigned_to=?, component_id=?, due_date=?, start_date=?,
             updated_at=datetime('now'), closed_at=datetime('now')
         WHERE id=?
       `).run(newType, newTitle, newDescription, newStatus, newPriority,
-             newOpenedBy, newAssignedTo, newComponentId, newDueDate, id);
+             newOpenedBy, newAssignedTo, newComponentId, newDueDate, newStartDate, id);
     } else {
       db.prepare(`
         UPDATE items
         SET type=?, title=?, description=?, status=?, priority=?,
-            opened_by=?, assigned_to=?, component_id=?, due_date=?,
+            opened_by=?, assigned_to=?, component_id=?, due_date=?, start_date=?,
             updated_at=datetime('now'), closed_at=?
         WHERE id=?
       `).run(newType, newTitle, newDescription, newStatus, newPriority,
-             newOpenedBy, newAssignedTo, newComponentId, newDueDate, newClosedAt, id);
+             newOpenedBy, newAssignedTo, newComponentId, newDueDate, newStartDate, newClosedAt, id);
     }
 
     const updated = db.prepare(`

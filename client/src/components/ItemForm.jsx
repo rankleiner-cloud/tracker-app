@@ -11,6 +11,7 @@ const INITIAL = {
   assigned_to: '',
   component_id: '',
   due_date:    '',
+  start_date:  '',
 };
 
 export default function ItemForm({ item, prefill, users, components, onSave, onClose }) {
@@ -31,6 +32,7 @@ export default function ItemForm({ item, prefill, users, components, onSave, onC
         assigned_to:  item.assigned_to  != null ? String(item.assigned_to)  : '',
         component_id: item.component_id != null ? String(item.component_id) : '',
         due_date: item.due_date ? item.due_date.slice(0, 10) : '',
+        start_date: item.start_date ? item.start_date.slice(0, 10) : '',
       });
     } else if (prefill) {
       setForm({
@@ -43,6 +45,7 @@ export default function ItemForm({ item, prefill, users, components, onSave, onC
         assigned_to:  prefill.assigned_to  != null ? String(prefill.assigned_to)  : '',
         component_id: prefill.component_id != null ? String(prefill.component_id) : '',
         due_date: prefill.due_date ? prefill.due_date.slice(0, 10) : '',
+        start_date: prefill.start_date ? prefill.start_date.slice(0, 10) : '',
       });
     } else {
       setForm(INITIAL);
@@ -71,6 +74,7 @@ export default function ItemForm({ item, prefill, users, components, onSave, onC
         assigned_to:  form.assigned_to  ? Number(form.assigned_to)  : null,
         component_id: form.component_id ? Number(form.component_id) : null,
         due_date: form.due_date || null,
+        start_date: form.start_date || null,
       });
     } catch (e) {
       setError(e.message);
@@ -195,6 +199,16 @@ export default function ItemForm({ item, prefill, users, components, onSave, onC
                 <option key={c.id} value={String(c.id)}>{c.name}</option>
               ))}
             </select>
+          </div>
+
+          {/* Start Date */}
+          <div className="form-group">
+            <label>{t('formStartDate')}</label>
+            <input
+              type="date"
+              value={form.start_date}
+              onChange={e => set('start_date', e.target.value)}
+            />
           </div>
 
           {/* Due Date */}

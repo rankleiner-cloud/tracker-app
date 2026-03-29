@@ -2,7 +2,7 @@ const translations = {
   en: {
     // Nav
     appTitle:        'Team Tracker',
-    navItems:        'Items',
+    navItems:        'All Items',
     navReport:       'Report',
     navConfig:       'Configuration',
 
@@ -44,7 +44,7 @@ const translations = {
     filterClear:         'Clear Filters',
 
     // Item list
-    itemsTitle:      'Items',
+    itemsTitle:      'All Items',
     newItem:         '+ New Item',
     colId:           '#',
     colType:         'Type',
@@ -59,10 +59,15 @@ const translations = {
     duplicateItem:   'Duplicate',
     noItems:         'No items match the current filters.',
     colDueDate:          'Due Date',
+    colStartDate:    'Start',
+    futureBadge:     'Future',
     formDueDate:         'Due Date',
+    formStartDate:   'Start Date',
     formOpenedOn:        'Opened On',
     navDueSoon:          '⚠ Due Soon',
     navClosed:           'Closed Items',
+    navFutureItems:  '🔮 Future Items',
+    navGantt:        '📊 Gantt',
     sortDueAsc:          'Due ↑',
     sortDueDesc:         'Due ↓',
     sortClear:           'Clear Sort',
@@ -162,12 +167,17 @@ const translations = {
     reportHTMLFilterOpenedBy:  'Opened By',
     reportHTMLFilterAssignedTo:'Assigned To',
     reportHTMLFilterComponent: 'Component',
+
+    ganttTitle:      'Requirements Gantt',
+    ganttNoReqs:     'No requirements found.',
+    ganttNoEnd:      'No end date',
+    ganttToday:      'Today',
   },
 
   he: {
     // Nav
     appTitle:        'מעקב צוות',
-    navItems:        'פריטים',
+    navItems:        'כל הפריטים',
     navReport:       'דוח',
     navConfig:       'הגדרות',
 
@@ -209,7 +219,7 @@ const translations = {
     filterClear:         'נקה פילטרים',
 
     // Item list
-    itemsTitle:      'פריטים',
+    itemsTitle:      'כל הפריטים',
     newItem:         '+ פריט חדש',
     colId:           '#',
     colType:         'סוג',
@@ -224,10 +234,15 @@ const translations = {
     duplicateItem:   'שכפל',
     noItems:         'לא נמצאו פריטים התואמים את הפילטרים.',
     colDueDate:          'תאריך יעד',
+    colStartDate:    'התחלה',
+    futureBadge:     'עתידי',
     formDueDate:         'תאריך יעד',
+    formStartDate:   'תאריך התחלה',
     formOpenedOn:        'תאריך פתיחה',
     navDueSoon:          '⚠ בקרוב',
     navClosed:           'פריטים סגורים',
+    navFutureItems:  '🔮 פריטים עתידיים',
+    navGantt:        '📊 גאנט',
     sortDueAsc:          'יעד ↑',
     sortDueDesc:         'יעד ↓',
     sortClear:           'נקה מיון',
@@ -326,6 +341,11 @@ const translations = {
     reportHTMLFilterOpenedBy:  'נפתח על ידי',
     reportHTMLFilterAssignedTo:'מוקצה ל',
     reportHTMLFilterComponent: 'רכיב',
+
+    ganttTitle:      'גאנט דרישות',
+    ganttNoReqs:     'לא נמצאו דרישות.',
+    ganttNoEnd:      'ללא תאריך סיום',
+    ganttToday:      'היום',
   },
 };
 
