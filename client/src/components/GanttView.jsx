@@ -33,7 +33,7 @@ function buildExportSVG(withDates, months, toPct, todayPct, isRTL) {
   const labelX0  = isRTL ? CHART_WIDTH : 0;           // label area left edge
   const dividerX = isRTL ? CHART_WIDTH : LABEL_WIDTH; // vertical divider
 
-  const xPos = (pct) => chartX0 + (pct / 100) * CHART_WIDTH;
+  const xPos = (pct) => chartX0 + ((100 - pct) / 100) * CHART_WIDTH;
 
   // Label text: LTR → anchor left near labelX0; RTL → anchor end near right edge of label area
   const labelTextX      = isRTL ? EXPORT_WIDTH - 12 : labelX0 + 12;
@@ -103,7 +103,7 @@ function buildExportSVG(withDates, months, toPct, todayPct, isRTL) {
     const startPct = Math.max(0, Math.min(100, toPct(item.startDate)));
     const endPct   = item.endDate ? Math.max(0, Math.min(100, toPct(item.endDate))) : Math.min(100, startPct + 3);
     const wPct     = Math.max(endPct - startPct, 0.4);
-    const bx       = xPos(startPct);
+    const bx       = xPos(endPct);
     const bw       = Math.max((wPct / 100) * CHART_WIDTH, 6);
     const by       = ry + BAR_TOP;
 
@@ -164,7 +164,7 @@ export default function GanttView({ items, t, isRTL }) {
     start.setHours(0, 0, 0, 0);
     const end = item.due_date ? (() => { const d = new Date(item.due_date); d.setHours(0, 0, 0, 0); return d; })() : null;
     return { ...item, startDate: start, endDate: end, isFuture: start > today };
-  });
+  }).sort((a, b) => a.startDate - b.startDate);
 
   const allStarts = withDates.map(i => i.startDate.getTime());
   const allEnds   = withDates.filter(i => i.endDate).map(i => i.endDate.getTime());
@@ -253,7 +253,7 @@ export default function GanttView({ items, t, isRTL }) {
             <div style={{ flex: 1, position: 'relative' }}>
               {months.map((mo, i) => (
                 <div key={i} style={{
-                  position: 'absolute', left: `${mo.pct}%`, top: 0, bottom: 0,
+                  position: 'absolute', left: `${100 - mo.pct}%`, top: 0, bottom: 0,
                   borderLeft: '1px solid #e5e7eb', paddingLeft: 5,
                   fontSize: '0.7rem', color: '#9ca3af',
                   display: 'flex', alignItems: 'center', whiteSpace: 'nowrap',
@@ -262,7 +262,7 @@ export default function GanttView({ items, t, isRTL }) {
                 </div>
               ))}
               {todayPct >= 0 && todayPct <= 100 && (
-                <div style={{ position: 'absolute', left: `${todayPct}%`, top: 0, bottom: 0, width: 2, background: '#ef4444', opacity: 0.8 }} />
+                <div style={{ position: 'absolute', left: `${100 - todayPct}%`, top: 0, bottom: 0, width: 2, background: '#ef4444', opacity: 0.8 }} />
               )}
             </div>
           </div>
@@ -297,16 +297,16 @@ export default function GanttView({ items, t, isRTL }) {
 
                 <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
                   {months.map((mo, i) => (
-                    <div key={i} style={{ position: 'absolute', left: `${mo.pct}%`, top: 0, bottom: 0, width: 1, background: '#f3f4f6' }} />
+                    <div key={i} style={{ position: 'absolute', left: `${100 - mo.pct}%`, top: 0, bottom: 0, width: 1, background: '#f3f4f6' }} />
                   ))}
                   {todayPct >= 0 && todayPct <= 100 && (
-                    <div style={{ position: 'absolute', left: `${todayPct}%`, top: 0, bottom: 0, width: 2, background: '#ef4444', opacity: 0.25, zIndex: 1 }} />
+                    <div style={{ position: 'absolute', left: `${100 - todayPct}%`, top: 0, bottom: 0, width: 2, background: '#ef4444', opacity: 0.25, zIndex: 1 }} />
                   )}
                   <div
                     title={`${item.title}\n${t('formStartDate')}: ${formatDateShort(item.startDate)}${item.endDate ? `\n${t('formDueDate')}: ${formatDateShort(item.endDate)}` : ''}`}
                     style={{
                       position: 'absolute',
-                      left: `${startPct}%`,
+                      left: `${100 - endPct}%`,
                       width: `${widthPct}%`,
                       top: BAR_TOP,
                       height: BAR_HEIGHT,
