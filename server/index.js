@@ -112,7 +112,7 @@ app.post('/api/items', (req, res) => {
     if (!title || !title.trim())   return fail(res, 'Title is required.');
     if (!opened_by)                return fail(res, 'Opened By is required.');
 
-    const validTypes      = ['requirement', 'bug', 'improvement', 'system-requirement'];
+    const validTypes      = ['requirement', 'bug', 'improvement', 'reminder'];
     const validStatuses   = ['open-new', 'open', 'for-test', 'rejected', 'closed'];
     const validPriorities = ['high', 'medium', 'low'];
     if (!validTypes.includes(type))          return fail(res, 'Invalid type.');

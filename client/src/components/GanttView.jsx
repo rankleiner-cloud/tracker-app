@@ -143,7 +143,7 @@ function buildExportSVG(withDates, months, toPct, todayPct, isRTL) {
   return s;
 }
 
-export default function GanttView({ items, t, isRTL }) {
+export default function GanttView({ items, t, isRTL, onEdit }) {
   const [downloading, setDownloading] = useState(false);
 
   const reqs = items.filter(i => i.type === 'requirement' && i.status !== 'closed');
@@ -275,10 +275,11 @@ export default function GanttView({ items, t, isRTL }) {
             const widthPct = Math.max(endPct - startPct, 0.4);
 
             return (
-              <div key={item.id} style={{
+              <div key={item.id} onClick={() => onEdit && onEdit(item)} style={{
                 display: 'flex', height: ROW_HEIGHT,
                 borderBottom: '1px solid #f3f4f6',
                 background: idx % 2 === 0 ? '#fff' : '#fafafa',
+                cursor: 'pointer',
               }}>
                 <div style={{
                   width: LABEL_WIDTH, flexShrink: 0, borderRight: '1px solid #e5e7eb',

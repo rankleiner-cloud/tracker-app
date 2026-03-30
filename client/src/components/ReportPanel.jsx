@@ -19,7 +19,7 @@ function buildReportHTML(items, filters, users, components, t, lang) {
   // Build filter summary labels
   const filterLines = [];
   if (filters.type      !== 'all') filterLines.push(`${t('reportHTMLFilterType')}: ${
-    { requirement: t('typeRequirement'), bug: t('typeBug'), improvement: t('typeImprovement'), 'system-requirement': t('typeSystemReq') }[filters.type] || filters.type
+    { requirement: t('typeRequirement'), bug: t('typeBug'), improvement: t('typeImprovement'), 'reminder': t('typeSystemReq') }[filters.type] || filters.type
   }`);
   if (filters.status    !== 'all') filterLines.push(`${t('reportHTMLFilterStatus')}: ${
     { 'open-new': t('statusOpenNew'), open: t('statusOpen'), 'for-test': t('statusForTest'), rejected: t('statusRejected'), closed: t('statusClosed') }[filters.status] || filters.status
@@ -55,7 +55,7 @@ function buildReportHTML(items, filters, users, components, t, lang) {
     requirement:          t('typeRequirement'),
     bug:                  t('typeBug'),
     improvement:          t('typeImprovement'),
-    'system-requirement': t('typeSystemReq'),
+    'reminder': t('typeSystemReq'),
   }[type] || type);
 
   const statusLabel = (status) => ({
@@ -272,7 +272,7 @@ export default function ReportPanel({ items, users, components }) {
               <option value="requirement">{t('typeRequirement')}</option>
               <option value="bug">{t('typeBug')}</option>
               <option value="improvement">{t('typeImprovement')}</option>
-              <option value="system-requirement">{t('typeSystemReq')}</option>
+              <option value="reminder">{t('typeSystemReq')}</option>
             </select>
           </div>
 

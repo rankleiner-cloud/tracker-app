@@ -81,7 +81,7 @@ export default function ItemList({ items, onEdit, onDelete, onDuplicate, onNewIt
     requirement:        t('typeRequirement'),
     bug:                t('typeBug'),
     improvement:        t('typeImprovement'),
-    'system-requirement': t('typeSystemReq'),
+    'reminder': t('typeSystemReq'),
   }[type] || type);
 
   const statusLabel = (status) => ({

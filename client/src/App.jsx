@@ -194,13 +194,11 @@ export default function App() {
   let filteredItems = items.filter(item => {
     if (view === 'closed') {
       if (item.status !== 'closed') return false;
-    } else if (view === 'future') {
+    } else if (view === 'reminders') {
       if (item.status === 'closed') return false;
-      if (!isFutureItem(item)) return false;
+      if (item.type !== 'reminder') return false;
     } else {
       if (item.status === 'closed') return false;
-      // due-soon and component views: hide future items
-      if ((view === 'due-soon' || view.startsWith('component-')) && isFutureItem(item)) return false;
       if (view === 'due-soon') {
         if (!item.due_date) return false;
         const due = new Date(item.due_date);
@@ -248,7 +246,7 @@ export default function App() {
   const navItems = [
     { key: 'items',    label: t('navItems') },
     ...components.map(c => ({ key: `component-${c.id}`, label: c.name, isComponent: true })),
-    { key: 'future',   label: t('navFutureItems') },
+    { key: 'reminders', label: t('navReminders') },
     { key: 'due-soon', label: t('navDueSoon') },
     { key: 'gantt',    label: t('navGantt') },
     { key: 'closed',   label: t('navClosed') },
@@ -347,7 +345,7 @@ export default function App() {
           </div>
         )}
 
-        {!loading && !error && (view === 'items' || view.startsWith('component-') || view === 'due-soon' || view === 'closed' || view === 'future') && (
+        {!loading && !error && (view === 'items' || view.startsWith('component-') || view === 'due-soon' || view === 'closed' || view === 'reminders') && (
           <>
             <ItemFilters
               filters={filters}
@@ -364,11 +362,9 @@ export default function App() {
               totalCount={
                 view === 'closed'
                   ? items.filter(i => i.status === 'closed').length
-                  : view === 'future'
-                    ? items.filter(i => i.status !== 'closed' && isFutureItem(i)).length
-                    : activeComponentId !== null
-                      ? items.filter(i => i.component_id === activeComponentId && i.status !== 'closed').length
-                      : items.filter(i => i.status !== 'closed').length
+                  : activeComponentId !== null
+                    ? items.filter(i => i.component_id === activeComponentId && i.status !== 'closed').length
+                    : items.filter(i => i.status !== 'closed').length
               }
               onOpenAttachments={(item) => setAttachmentsItem(item)}
               sortDue={sortDue}
@@ -379,7 +375,7 @@ export default function App() {
         )}
 
         {!loading && !error && view === 'gantt' && (
-          <GanttView items={items} t={t} isRTL={isRTL} />
+          <GanttView items={items} t={t} isRTL={isRTL} onEdit={openEdit} />
         )}
 
         {!loading && !error && view === 'report' && (

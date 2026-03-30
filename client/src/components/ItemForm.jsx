@@ -117,7 +117,7 @@ export default function ItemForm({ item, prefill, users, components, onSave, onC
               <option value="requirement">{t('typeRequirement')}</option>
               <option value="bug">{t('typeBug')}</option>
               <option value="improvement">{t('typeImprovement')}</option>
-              <option value="system-requirement">{t('typeSystemReq')}</option>
+              <option value="reminder">{t('typeSystemReq')}</option>
             </select>
           </div>
 
