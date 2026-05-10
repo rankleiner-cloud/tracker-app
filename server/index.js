@@ -419,6 +419,23 @@ app.delete('/api/components/:id', (req, res) => {
   }
 });
 
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
+app.post('/api/auth/login', (req, res) => {
+  try {
+    const db = getDb();
+    const { name, email } = req.body;
+    if (!name || !email) return fail(res, 'Name and email are required.');
+    const user = db.prepare(
+      'SELECT id, name, email FROM users WHERE LOWER(name) = LOWER(?) AND LOWER(email) = LOWER(?)'
+    ).get((name || '').trim(), (email || '').trim());
+    if (!user) return fail(res, 'Invalid name or email.', 401);
+    ok(res, user);
+  } catch (e) {
+    fail(res, e.message, 500);
+  }
+});
+
 // ─── Serve React build in production ─────────────────────────────────────────
 
 const distPath = path.join(__dirname, '..', 'client', 'dist');

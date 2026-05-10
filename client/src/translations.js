@@ -173,6 +173,19 @@ const translations = {
     ganttNoReqs:     'No requirements found.',
     ganttNoEnd:      'No end date',
     ganttToday:      'Today',
+
+    // Login
+    loginSubtitle:        'Please sign in to continue',
+    loginName:            'Full Name',
+    loginNamePlaceholder: 'Enter your name...',
+    loginEmail:           'Email Address',
+    loginEmailPlaceholder:'Enter your email...',
+    loginBtn:             'Sign In',
+    loginLoading:         'Signing in...',
+    loginFieldsRequired:  'Name and email are required.',
+    loginInvalid:         'Name or email not recognised. Please check your details.',
+    loginServerError:     'Could not connect to the server. Please try again.',
+    loginLogout:          'Sign Out',
   },
 
   he: {
@@ -348,6 +361,19 @@ const translations = {
     ganttNoReqs:     'לא נמצאו דרישות.',
     ganttNoEnd:      'ללא תאריך סיום',
     ganttToday:      'היום',
+
+    // Login
+    loginSubtitle:        'אנא היכנס כדי להמשיך',
+    loginName:            'שם מלא',
+    loginNamePlaceholder: 'הזן את שמך...',
+    loginEmail:           'כתובת אימייל',
+    loginEmailPlaceholder:'הזן את כתובת האימייל שלך...',
+    loginBtn:             'כניסה',
+    loginLoading:         'מתחבר...',
+    loginFieldsRequired:  'שם ואימייל נדרשים.',
+    loginInvalid:         'שם או אימייל אינם מוכרים. אנא בדוק את הפרטים.',
+    loginServerError:     'לא ניתן להתחבר לשרת. אנא נסה שוב.',
+    loginLogout:          'יציאה',
   },
 };
 

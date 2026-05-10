@@ -6,6 +6,7 @@ import ConfigPanel       from './components/ConfigPanel.jsx';
 import ReportPanel       from './components/ReportPanel.jsx';
 import AttachmentsModal  from './components/AttachmentsModal.jsx';
 import GanttView         from './components/GanttView.jsx';
+import LoginScreen       from './components/LoginScreen.jsx';
 import { useLanguage } from './LanguageContext.jsx';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -20,9 +21,40 @@ async function apiFetch(url, options = {}) {
   return json.data;
 }
 
-// ─── component ───────────────────────────────────────────────────────────────
+const SESSION_KEY = 'tracker_user';
+
+// ─── Auth wrapper ─────────────────────────────────────────────────────────────
 
 export default function App() {
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem(SESSION_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleLogin = (user) => {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    setCurrentUser(user);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem(SESSION_KEY);
+    setCurrentUser(null);
+  };
+
+  if (!currentUser) {
+    return <LoginScreen onLogin={handleLogin} />;
+  }
+
+  return <MainApp currentUser={currentUser} onLogout={handleLogout} />;
+}
+
+// ─── Main application ─────────────────────────────────────────────────────────
+
+function MainApp({ currentUser, onLogout }) {
   const { lang, setLang, t, isRTL } = useLanguage();
 
   const [view, setView]           = useState('items'); // 'items' | 'component-{id}' | 'report' | 'config'
@@ -185,12 +217,6 @@ export default function App() {
   const sevenDaysLater = new Date(today);
   sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
 
-  const isFutureItem = (item) => {
-    const d = new Date(item.start_date || item.created_at);
-    d.setHours(0, 0, 0, 0);
-    return d > today;
-  };
-
   let filteredItems = items.filter(item => {
     if (view === 'closed') {
       if (item.status !== 'closed') return false;
@@ -307,27 +333,47 @@ export default function App() {
           );
         })}
 
-        {/* Language toggle — pushed to the far end */}
-        <div style={{ marginInlineStart: 'auto', display: 'flex', gap: 2 }}>
-          {['en', 'he'].map(l => (
-            <button
-              key={l}
-              onClick={() => setLang(l)}
-              style={{
-                background: lang === l ? 'rgba(255,255,255,0.2)' : 'transparent',
-                color: lang === l ? '#fff' : 'rgba(255,255,255,0.5)',
-                border: lang === l ? '1px solid rgba(255,255,255,0.35)' : '1px solid transparent',
-                padding: '4px 10px',
-                borderRadius: 5,
-                cursor: 'pointer',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                letterSpacing: '0.04em',
-              }}
-            >
-              {l === 'en' ? 'EN' : 'עב'}
-            </button>
-          ))}
+        {/* Right side: user info + language toggle */}
+        <div style={{ marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.85rem' }}>
+            {currentUser.name}
+          </span>
+          <button
+            onClick={onLogout}
+            style={{
+              background: 'rgba(255,255,255,0.1)',
+              color: 'rgba(255,255,255,0.8)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              padding: '4px 10px',
+              borderRadius: 5,
+              cursor: 'pointer',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+            }}
+          >
+            {t('loginLogout')}
+          </button>
+          <div style={{ display: 'flex', gap: 2, marginInlineStart: 4 }}>
+            {['en', 'he'].map(l => (
+              <button
+                key={l}
+                onClick={() => setLang(l)}
+                style={{
+                  background: lang === l ? 'rgba(255,255,255,0.2)' : 'transparent',
+                  color: lang === l ? '#fff' : 'rgba(255,255,255,0.5)',
+                  border: lang === l ? '1px solid rgba(255,255,255,0.35)' : '1px solid transparent',
+                  padding: '4px 10px',
+                  borderRadius: 5,
+                  cursor: 'pointer',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                {l === 'en' ? 'EN' : 'עב'}
+              </button>
+            ))}
+          </div>
         </div>
       </nav>
 
