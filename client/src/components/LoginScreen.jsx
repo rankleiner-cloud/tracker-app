@@ -1,12 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../LanguageContext.jsx';
 
 export default function LoginScreen({ onLogin }) {
   const { t, isRTL } = useLanguage();
-  const [name,    setName]    = useState('');
-  const [email,   setEmail]   = useState('');
-  const [error,   setError]   = useState('');
-  const [loading, setLoading] = useState(false);
+  const [name,       setName]       = useState('');
+  const [email,      setEmail]      = useState('');
+  const [error,      setError]      = useState('');
+  const [loading,    setLoading]    = useState(false);
+  const [needsSetup, setNeedsSetup] = useState(false);
+  const [mode,       setMode]       = useState('login'); // 'login' | 'setup'
+
+  useEffect(() => {
+    fetch('/api/auth/needs-setup')
+      .then(r => r.json())
+      .then(json => {
+        if (json.success && json.data.needsSetup) {
+          setNeedsSetup(true);
+          setMode('setup');
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,15 +30,16 @@ export default function LoginScreen({ onLogin }) {
       return;
     }
     setLoading(true);
+    const endpoint = mode === 'setup' ? '/api/auth/setup' : '/api/auth/login';
     try {
-      const res  = await fetch('/api/auth/login', {
+      const res  = await fetch(endpoint, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ name: name.trim(), email: email.trim() }),
       });
       const json = await res.json();
       if (!json.success) {
-        setError(t('loginInvalid'));
+        setError(mode === 'setup' ? json.error : t('loginInvalid'));
       } else {
         onLogin(json.data);
       }
@@ -34,6 +49,8 @@ export default function LoginScreen({ onLogin }) {
       setLoading(false);
     }
   };
+
+  const isSetup = mode === 'setup';
 
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} style={{
@@ -54,18 +71,28 @@ export default function LoginScreen({ onLogin }) {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{ fontSize: '2.2rem', marginBottom: 8 }}>&#128203;</div>
-          <h1 style={{
-            margin: 0,
-            fontSize: '1.4rem',
-            fontWeight: 700,
-            color: '#1e1b4b',
-          }}>
+          <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700, color: '#1e1b4b' }}>
             {t('appTitle')}
           </h1>
           <p style={{ margin: '6px 0 0', color: '#6b7280', fontSize: '0.9rem' }}>
-            {t('loginSubtitle')}
+            {isSetup ? t('setupSubtitle') : t('loginSubtitle')}
           </p>
         </div>
+
+        {/* Setup notice */}
+        {isSetup && (
+          <div style={{
+            marginBottom: 20,
+            padding: '10px 14px',
+            background: '#eff6ff',
+            border: '1px solid #bfdbfe',
+            borderRadius: 6,
+            color: '#1d4ed8',
+            fontSize: '0.88rem',
+          }}>
+            {t('setupNotice')}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <label style={labelStyle}>{t('loginName')}</label>
@@ -120,9 +147,30 @@ export default function LoginScreen({ onLogin }) {
               transition: 'background 0.15s',
             }}
           >
-            {loading ? t('loginLoading') : t('loginBtn')}
+            {loading
+              ? t('loginLoading')
+              : isSetup ? t('setupBtn') : t('loginBtn')}
           </button>
         </form>
+
+        {/* Toggle between login / setup (only if setup is available) */}
+        {needsSetup && (
+          <div style={{ textAlign: 'center', marginTop: 18 }}>
+            <button
+              onClick={() => { setMode(isSetup ? 'login' : 'setup'); setError(''); }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#6366f1',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                textDecoration: 'underline',
+              }}
+            >
+              {isSetup ? t('loginSwitchToLogin') : t('loginSwitchToSetup')}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -186,6 +186,11 @@ const translations = {
     loginInvalid:         'Name or email not recognised. Please check your details.',
     loginServerError:     'Could not connect to the server. Please try again.',
     loginLogout:          'Sign Out',
+    setupSubtitle:        'First-time setup — create your account',
+    setupNotice:          'No accounts exist yet. Enter your name and email to create the first account.',
+    setupBtn:             'Create Account & Sign In',
+    loginSwitchToSetup:   'Create first account',
+    loginSwitchToLogin:   'Back to sign in',
   },
 
   he: {
@@ -374,6 +379,11 @@ const translations = {
     loginInvalid:         'שם או אימייל אינם מוכרים. אנא בדוק את הפרטים.',
     loginServerError:     'לא ניתן להתחבר לשרת. אנא נסה שוב.',
     loginLogout:          'יציאה',
+    setupSubtitle:        'הגדרה ראשונית — צור את החשבון שלך',
+    setupNotice:          'אין חשבונות עדיין. הזן שם ואימייל ליצירת החשבון הראשון.',
+    setupBtn:             'צור חשבון והיכנס',
+    loginSwitchToSetup:   'צור חשבון ראשון',
+    loginSwitchToLogin:   'חזור להתחברות',
   },
 };
 

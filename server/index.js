@@ -421,6 +421,43 @@ app.delete('/api/components/:id', (req, res) => {
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
+app.get('/api/auth/needs-setup', (req, res) => {
+  try {
+    const db = getDb();
+    const row = db.prepare(`SELECT COUNT(*) AS c FROM users WHERE email != ''`).get();
+    ok(res, { needsSetup: !row || row.c === 0 });
+  } catch (e) {
+    fail(res, e.message, 500);
+  }
+});
+
+app.post('/api/auth/setup', (req, res) => {
+  try {
+    const db = getDb();
+    // Only allowed when no users with emails exist yet
+    const row = db.prepare(`SELECT COUNT(*) AS c FROM users WHERE email != ''`).get();
+    if (row && row.c > 0) return fail(res, 'Setup already completed.', 403);
+
+    const { name, email } = req.body;
+    if (!name || !name.trim()) return fail(res, 'Name is required.');
+    if (!email || !email.trim()) return fail(res, 'Email is required.');
+
+    // Insert or update (seed users exist without email)
+    const existing = db.prepare('SELECT id FROM users WHERE LOWER(name) = LOWER(?)').get(name.trim());
+    let user;
+    if (existing) {
+      db.prepare('UPDATE users SET email = ? WHERE id = ?').run(email.trim(), existing.id);
+      user = db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(existing.id);
+    } else {
+      const result = db.prepare('INSERT INTO users (name, email) VALUES (?, ?)').run(name.trim(), email.trim());
+      user = db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(result.lastInsertRowid);
+    }
+    ok(res, user);
+  } catch (e) {
+    fail(res, e.message, 500);
+  }
+});
+
 app.post('/api/auth/login', (req, res) => {
   try {
     const db = getDb();
